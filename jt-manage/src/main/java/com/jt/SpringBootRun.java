@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class SpringBootRun {
 	
 	public static void main(String[] args) {
-		
+		System.out.println();
 		SpringApplication.run(SpringBootRun.class, args);
 	}
 }
