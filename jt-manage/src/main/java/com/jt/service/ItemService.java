@@ -17,5 +17,6 @@ public interface ItemService {
 	void updateStatus(Long[] ids, Integer status);
 
 	ItemDesc findItemDescById(Long itemId);
-	
+
+    Item findItemById(Long itemId);
 }
