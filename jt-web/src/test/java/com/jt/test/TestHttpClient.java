@@ -1,7 +1,10 @@
 package com.jt.test;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.jt.util.HttpClientService;
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
@@ -69,6 +72,19 @@ public class TestHttpClient {
             String result = EntityUtils.toString(response.getEntity(), "utf-8");
             System.out.println(result);
         }
+    }
+
+    @Autowired
+    private HttpClientService httpClientService;//从池中获取连接
+
+    @Test
+    public void test03() {
+        String url = "http://manage.jt.com/web/item/findItemDescById";
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("itemId", "1043290");
+//        String result = httpClientService.doGet(url, params, null);
+        String result = httpClientService.doPost(url, params, null);
+        System.out.println(result);
     }
 
 
