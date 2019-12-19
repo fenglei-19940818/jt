@@ -3,9 +3,12 @@ package com.jt.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jt.mapper.UserMapper;
 import com.jt.pojo.User;
+import com.jt.util.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import redis.clients.jedis.JedisCluster;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +19,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private JedisCluster jedis;
 
     @Override
     public List<User> findAll() {
@@ -55,6 +61,18 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String register(User user) {
         userMapper.insert(user);
+        return user.getUsername();
+    }
+
+    @Override
+    public String queryUserLogin(String ticket, String ip) {
+        String redisIP = jedis.hget(ticket, "JT_USER_IP");
+        //对比当前访问IP和redis存储的IP是否一样
+        if (!ip.equals(redisIP)) {
+            return null;
+        }
+        String userStr = jedis.hget(ticket, "JT_USER");
+        User user = JsonUtil.getJsonToBean(userStr, User.class);
         return user.getUsername();
     }
 }

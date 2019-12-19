@@ -21,11 +21,4 @@ public class UserServiceImpl implements UserService {
     @Value("${sso.url}")
     private String ssoUrl;
 
-    @Override
-    public String doRegister(User user) {
-//        String beanToJson = JsonUtil.getBeanToJson(user);
-//        Map<String, String> paramMap = BeanMapUtil.stringToMap(beanToJson, ":", ",");
-//        String s = httpClientService.doPost(ssoUrl, paramMap, "utf-8");
-        return null;
-    }
 }

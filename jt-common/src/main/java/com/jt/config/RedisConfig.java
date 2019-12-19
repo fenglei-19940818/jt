@@ -19,9 +19,9 @@ import redis.clients.jedis.JedisSentinelPool;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.ShardedJedis;
 
-//@Configuration //标识配置类  xml配置
-////引入主启动类所在项目的配置文件.
-//@PropertySource("classpath:/properties/redis.properties")
+@Configuration //标识配置类  xml配置
+//引入主启动类所在项目的配置文件.
+@PropertySource("classpath:/properties/redis.properties")
 public class RedisConfig {
 
     @Value("${redis.nodes}")

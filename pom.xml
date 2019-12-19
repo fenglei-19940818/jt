@@ -112,11 +112,11 @@
 		</dependency>
 		
 		<!--引入dubbo配置 -->
-		<!--<dependency>
+		<dependency>
 			<groupId>com.alibaba.boot</groupId>
 			<artifactId>dubbo-spring-boot-starter</artifactId>
 			<version>0.2.0</version>
-		</dependency>-->
+		</dependency>
 		
 		<!--添加Quartz的支持 -->
 		<dependency>
