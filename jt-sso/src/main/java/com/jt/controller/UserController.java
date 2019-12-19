@@ -73,24 +73,4 @@ public class UserController {
         return new JSONPObject(callback, sysResult.setData(userExist));
     }
 
-    /**
-     * 用户注册
-     *
-     * @param user
-     * @return
-     */
-    @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public JSONPObject register(User user, String callback) {
-        SysResult sysResult = new SysResult();
-        String username = userService.register(user);
-        return new JSONPObject(callback, sysResult.setData(username));
-    }
-
-//
-//    @RequestMapping(value = "/login", method = RequestMethod.POST)
-//    public JSONPObject login(String u, String p) {
-//        SysResult sysResult = new SysResult();
-//        String username = userService.login(u, p);
-//        return new JSONPObject(callback, sysResult.setData(username));
-//    }
 }

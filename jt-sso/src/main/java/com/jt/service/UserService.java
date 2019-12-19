@@ -9,7 +9,5 @@ public interface UserService {
 
     Boolean findUserExist(String param, Integer type);
 
-    String register(User user);
-
     String queryUserLogin(String ticket, String ip);
 }

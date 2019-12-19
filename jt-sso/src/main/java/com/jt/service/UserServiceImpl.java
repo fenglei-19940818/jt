@@ -1,5 +1,6 @@
 package com.jt.service;
 
+//import com.alibaba.dubbo.config.annotation.Service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jt.mapper.UserMapper;
 import com.jt.pojo.User;
@@ -58,21 +59,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
-    public String register(User user) {
-        userMapper.insert(user);
-        return user.getUsername();
-    }
-
-    @Override
     public String queryUserLogin(String ticket, String ip) {
         String redisIP = jedis.hget(ticket, "JT_USER_IP");
-        //对比当前访问IP和redis存储的IP是否一样
-        if (!ip.equals(redisIP)) {
-            return null;
-        }
         String userStr = jedis.hget(ticket, "JT_USER");
         User user = JsonUtil.getJsonToBean(userStr, User.class);
+        //对比当前访问IP和redis存储的IP是否一样
+        if (!ip.equals(redisIP) || user == null) {
+            return null;
+        }
+
         return user.getUsername();
     }
 }
