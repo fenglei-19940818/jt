@@ -3,6 +3,7 @@ package com.jt.controller;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.jt.pojo.User;
 import com.jt.service.UserService;
+import com.jt.util.CookieUtil;
 import com.jt.util.IPUtil;
 import com.jt.util.JsonUtil;
 import com.jt.vo.SysResult;
@@ -13,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,19 +41,33 @@ public class UserController {
      * @param callback
      * @return
      */
-    @RequestMapping("/query/{ticket}")
-    public JSONPObject queryUserLogin(@PathVariable String ticket, String callback, HttpServletRequest request) {
+//    @RequestMapping(value = "/query/{ticket}/{username}/{ip}", method = RequestMethod.GET)
+//    public JSONPObject queryUserLogin(@PathVariable String ticket, @PathVariable String username, @PathVariable String ip, String callback, HttpServletRequest request, HttpServletResponse response) {
+    @RequestMapping(value = "/query/{ticket}/{username}", method = RequestMethod.GET)
+    public JSONPObject queryUserLogin(@PathVariable String ticket, @PathVariable String username, String callback, HttpServletRequest request, HttpServletResponse response) {
         //获取调用者IP
         String ip = IPUtil.getIpAddr(request);
-        String userName = userService.queryUserLogin(ticket, ip);
+        ticket = userService.queryUserLogin(ticket, username, ip);
         //判断用户名是否为空
-        if (StringUtils.isEmpty(userName)) {
+        if (StringUtils.isEmpty(ticket)) {
+            //删除cookie
+            CookieUtil.deleteCookie("JT_TICKET", "/", "jt.com", response);
+            CookieUtil.deleteCookie("JT_USER", "/", "jt.com", response);
             return new JSONPObject(callback, SysResult.fail());
         } else {
+            //cookie中存放秘钥信息
+            Cookie cookie = new Cookie("JT_TICKET", ticket);
+            //设置Cookie的最大生命周期,否则浏览器关闭后Cookie即失效(7天有效)
+            cookie.setMaxAge(7 * 24 * 60 * 60);
+            cookie.setPath("/");
+            cookie.setDomain("jt.com");
+            //将Cookie加到response中
+            response.addCookie(cookie);
+            //返回值
             Map<String, String> map = new HashMap<>();
-            map.put("username", userName);
-//            return new JSONPObject(callback, SysResult.success("username:" + userName));
+            map.put("username", username);
             return new JSONPObject(callback, SysResult.success(map));
+//            return new JSONPObject(callback, SysResult.success("username:"+userName));
         }
     }
 

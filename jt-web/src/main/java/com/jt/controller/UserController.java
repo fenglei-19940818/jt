@@ -78,6 +78,7 @@ public class UserController {
         if (StringUtils.isEmpty(ticket)) {
             return SysResult.fail();
         }
+        //cookie中存放秘钥信息
         Cookie cookie = new Cookie("JT_TICKET", ticket);
         //设置Cookie的最大生命周期,否则浏览器关闭后Cookie即失效(7天有效)
         cookie.setMaxAge(7 * 24 * 60 * 60);
@@ -85,6 +86,14 @@ public class UserController {
         cookie.setDomain("jt.com");
         //将Cookie加到response中
         response.addCookie(cookie);
+        //cookie中存放User信息
+        Cookie cookieUser = new Cookie("JT_USER", username);
+        //设置Cookie的最大生命周期,否则浏览器关闭后Cookie即失效(7天有效)
+        cookieUser.setMaxAge(7 * 24 * 60 * 60);
+        cookieUser.setPath("/");
+        cookieUser.setDomain("jt.com");
+        //将Cookie加到response中
+        response.addCookie(cookieUser);
         return sysResult.setData(ticket);
     }
 

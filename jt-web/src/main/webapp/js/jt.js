@@ -1,17 +1,22 @@
 var TT = JT = {
     checkLogin: function () {
         var _ticket = $.cookie("JT_TICKET");
-        if (!_ticket) {
+        var _username = $.cookie("JT_USER");
+        console.log($.cookie("JT_USER"))
+        var _ip = "127.0.0.2";
+        if (!_ticket || !_username) {
             return;
         }
         //当dataType类型为jsonp时，jQuery就会自动在请求链接上增加一个callback的参数
         $.ajax({
-            url: "http://sso.jt.com/user/query/" + _ticket,
+            // url: "http://sso.jt.com/user/query/" + _ticket + "/" + _username + "/" + _ip,
+            url: "http://sso.jt.com/user/query/" + _ticket + "/" + _username,
             dataType: "jsonp",
             type: "GET",
             success: function (data) {
                 if (data.status == 200) {
                     //把json串转化为js对象
+                    console.log(data.data)
                     // var _data = JSON.parse(data.data);
                     var _data = data.data;
                     var html = _data.username + "，欢迎来到京淘！<a href=\"http://www.jt.com/user/logout.html\" class=\"link-logout\">[退出]</a>";

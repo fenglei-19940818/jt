@@ -30,6 +30,14 @@ public class DubboUserServiceImpl implements DubboUserService {
         return insert;
     }
 
+    /**
+     * 用户登录往redis中存储登录信息
+     *
+     * @param username
+     * @param password
+     * @param ip
+     * @return
+     */
     @Override
     public String findUserByUP(String username, String password, String ip) {
         //获取密码的md5加密密码
@@ -45,10 +53,16 @@ public class DubboUserServiceImpl implements DubboUserService {
         //获取UUID
         String uuid = UUID.randomUUID().toString();
         //将user对象存储在redis缓存中
-        jedis.hset(uuid, "JT_USER", JsonUtil.getBeanToJson(user));
-        jedis.hset(uuid, "JT_USER_IP", ip);
+        jedis.hset("JT_USER_" + username, "JT_TICKET", uuid);
+        jedis.hset("JT_USER_" + username, "JT_USER", JsonUtil.getBeanToJson(user));
+        jedis.hset("JT_USER_" + username, "JT_USER_IP", ip);
         //设置过期时间
-        jedis.expire(uuid, 7 * 24 * 60 * 60);
+        jedis.expire("JT_USER_" + username, 7 * 24 * 60 * 60);
+//        //将user对象存储在redis缓存中
+//        jedis.hset(uuid, "JT_USER", JsonUtil.getBeanToJson(user));
+//        jedis.hset(uuid, "JT_USER_IP", ip);
+//        //设置过期时间
+//        jedis.expire(uuid, 7 * 24 * 60 * 60);
         return uuid;
     }
 }

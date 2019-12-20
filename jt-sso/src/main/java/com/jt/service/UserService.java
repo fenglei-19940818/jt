@@ -9,5 +9,5 @@ public interface UserService {
 
     Boolean findUserExist(String param, Integer type);
 
-    String queryUserLogin(String ticket, String ip);
+    String queryUserLogin(String ticket,String username, String ip);
 }

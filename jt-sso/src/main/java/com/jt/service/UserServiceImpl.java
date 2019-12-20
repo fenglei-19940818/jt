@@ -1,6 +1,7 @@
 package com.jt.service;
 
 //import com.alibaba.dubbo.config.annotation.Service;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jt.mapper.UserMapper;
 import com.jt.pojo.User;
@@ -14,6 +15,7 @@ import redis.clients.jedis.JedisCluster;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -59,15 +61,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String queryUserLogin(String ticket, String ip) {
-        String redisIP = jedis.hget(ticket, "JT_USER_IP");
-        String userStr = jedis.hget(ticket, "JT_USER");
+    public String queryUserLogin(String ticket, String username, String ip) {
+        //获取ip和user
+        String redisIP = jedis.hget("JT_USER_" + username, "JT_USER_IP");
+        String userStr = jedis.hget("JT_USER_" + username, "JT_USER");
+        String redisTicket = jedis.hget("JT_USER_" + username, "JT_TICKET");
         User user = JsonUtil.getJsonToBean(userStr, User.class);
-        //对比当前访问IP和redis存储的IP是否一样
-        if (!ip.equals(redisIP) || user == null) {
+        //判断ip是否相同或者user是否存在
+        if (!ip.equals(redisIP) || user == null || StringUtils.isEmpty(redisTicket) || !redisTicket.equals(ticket)) {
             return null;
         }
+        //判断如果存在此KEY代表用户已经登录
+        if (jedis.exists("JT_USER_" + username)) {
 
-        return user.getUsername();
+            //获取UUID
+            String uuid = UUID.randomUUID().toString();
+            //重写redis缓存中的数据
+            jedis.hset("JT_USER_" + username, "JT_TICKET", uuid);
+            jedis.hset("JT_USER_" + username, "JT_USER_IP", ip);
+            return uuid;
+        }
+
+        return null;
     }
 }
