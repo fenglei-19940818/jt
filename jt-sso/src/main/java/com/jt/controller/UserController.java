@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import redis.clients.jedis.JedisCluster;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -27,6 +28,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private JedisCluster jedisCluster;
 
     @RequestMapping("/findAll")
     public List<User> findAll() {
@@ -41,34 +44,66 @@ public class UserController {
      * @param callback
      * @return
      */
-//    @RequestMapping(value = "/query/{ticket}/{username}/{ip}", method = RequestMethod.GET)
-//    public JSONPObject queryUserLogin(@PathVariable String ticket, @PathVariable String username, @PathVariable String ip, String callback, HttpServletRequest request, HttpServletResponse response) {
     @RequestMapping(value = "/query/{ticket}/{username}", method = RequestMethod.GET)
     public JSONPObject queryUserLogin(@PathVariable String ticket, @PathVariable String username, String callback, HttpServletRequest request, HttpServletResponse response) {
-        //获取调用者IP
-        String ip = IPUtil.getIpAddr(request);
-        ticket = userService.queryUserLogin(ticket, username, ip);
-        //判断用户名是否为空
-        if (StringUtils.isEmpty(ticket)) {
-            //删除cookie
+        JSONPObject object = null;
+
+        //校验ticket是否有效 从redis中获取最终的ticket完成校验
+        String redisTicket = jedisCluster.get("JT_USER_" + username);
+        if (StringUtils.isEmpty(redisTicket)) {
+            //IP地址不正确.
+            object = new JSONPObject(callback, SysResult.fail());
+            //删除cookie信息
             CookieUtil.deleteCookie("JT_TICKET", "/", "jt.com", response);
             CookieUtil.deleteCookie("JT_USER", "/", "jt.com", response);
-            return new JSONPObject(callback, SysResult.fail());
-        } else {
-            //cookie中存放秘钥信息
-            Cookie cookie = new Cookie("JT_TICKET", ticket);
-            //设置Cookie的最大生命周期,否则浏览器关闭后Cookie即失效(7天有效)
-            cookie.setMaxAge(7 * 24 * 60 * 60);
-            cookie.setPath("/");
-            cookie.setDomain("jt.com");
-            //将Cookie加到response中
-            response.addCookie(cookie);
-            //返回值
-            Map<String, String> map = new HashMap<>();
-            map.put("username", username);
-            return new JSONPObject(callback, SysResult.success(map));
-//            return new JSONPObject(callback, SysResult.success("username:"+userName));
+            return object;
         }
+
+        //如果数据不相等,说明数据有误,不能展现.
+        if (!redisTicket.equals(ticket)) {
+
+            //IP地址不正确.
+            object = new JSONPObject(callback, SysResult.fail());
+            //删除cookie信息
+            CookieUtil.deleteCookie("JT_TICKET", "/", "jt.com", response);
+            CookieUtil.deleteCookie("JT_USER", "/", "jt.com", response);
+            return object;
+        }
+
+
+        //校验IP地址
+        String IP = IPUtil.getIpAddr(request);
+        Map<String, String> map = jedisCluster.hgetAll(ticket);
+
+        //1.校验IP是否有效.
+        if (!IP.equals(map.get("JT_USER_IP"))) {
+
+            //IP地址不正确.
+            object = new JSONPObject(callback, SysResult.fail());
+            //删除cookie信息
+            CookieUtil.deleteCookie("JT_TICKET", "/", "jt.com", response);
+            //删除cookie信息
+            CookieUtil.deleteCookie("JT_USER", "/", "jt.com", response);
+            return object;
+        }
+
+        //2.校验ticket数据信息.
+        String userJSON = map.get("JT_USER");
+        if (StringUtils.isEmpty(userJSON)) {
+
+            //IP地址不正确.
+            object = new JSONPObject(callback, SysResult.fail());
+            CookieUtil.deleteCookie("JT_TICKET", "/", "jt.com", response);
+            CookieUtil.deleteCookie("JT_USER", "/", "jt.com", response);
+            return object;
+        }
+
+//        Map<String, String> usermap = new HashMap<>();
+//        map.put("username", username);
+//        return new JSONPObject(callback, SysResult.success(usermap));
+        //3.表示校验成功
+        object = new JSONPObject(callback, SysResult.success(userJSON));
+        return object;
     }
 
     /**

@@ -2,7 +2,6 @@ var TT = JT = {
     checkLogin: function () {
         var _ticket = $.cookie("JT_TICKET");
         var _username = $.cookie("JT_USER");
-        console.log($.cookie("JT_USER"))
         var _ip = "127.0.0.2";
         if (!_ticket || !_username) {
             return;
@@ -16,9 +15,9 @@ var TT = JT = {
             success: function (data) {
                 if (data.status == 200) {
                     //把json串转化为js对象
-                    console.log(data.data)
-                    // var _data = JSON.parse(data.data);
-                    var _data = data.data;
+                    // console.log(data.data)
+                    var _data = JSON.parse(data.data);
+                    // var _data = data.data;
                     var html = _data.username + "，欢迎来到京淘！<a href=\"http://www.jt.com/user/logout.html\" class=\"link-logout\">[退出]</a>";
                     $("#loginbar").html(html);
                 }

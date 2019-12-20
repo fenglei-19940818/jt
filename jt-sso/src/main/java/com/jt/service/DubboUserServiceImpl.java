@@ -18,7 +18,7 @@ public class DubboUserServiceImpl implements DubboUserService {
     @Autowired
     private UserMapper userMapper;
     @Autowired
-    private JedisCluster jedis;
+    private JedisCluster jedisCluster;
 
 
     @Override
@@ -49,20 +49,34 @@ public class DubboUserServiceImpl implements DubboUserService {
         if (userDB == null || !md5Pass.equals(userDB.getPassword())) {
             return null;
         }
-        User user = new User().setId(userDB.getId()).setUsername(userDB.getUsername()).setPassword(UUID.randomUUID().toString());
-        //获取UUID
-        String uuid = UUID.randomUUID().toString();
-        //将user对象存储在redis缓存中
-        jedis.hset("JT_USER_" + username, "JT_TICKET", uuid);
-        jedis.hset("JT_USER_" + username, "JT_USER", JsonUtil.getBeanToJson(user));
-        jedis.hset("JT_USER_" + username, "JT_USER_IP", ip);
-        //设置过期时间
-        jedis.expire("JT_USER_" + username, 7 * 24 * 60 * 60);
-//        //将user对象存储在redis缓存中
-//        jedis.hset(uuid, "JT_USER", JsonUtil.getBeanToJson(user));
-//        jedis.hset(uuid, "JT_USER_IP", ip);
-//        //设置过期时间
-//        jedis.expire(uuid, 7 * 24 * 60 * 60);
-        return uuid;
+
+        /**
+         * 为了保证redis资源不浪费,则需要校验数据.
+         * 如果检查发现当前用户已经登陆过,则删除之前的数据.
+         */
+        if (jedisCluster.exists("JT_USER_" + username)) {
+            //之前已经登录过.删除之前的ticket
+            String oldTicket = jedisCluster.get("JT_USER_" + username);
+            jedisCluster.del(oldTicket);
+        }
+
+
+        //程序执行到这里说明用户输入正确.
+        //3.1获取uuid
+        String ticket = UUID.randomUUID().toString();
+        //3.2准备userJSON数据  数据必须进行脱敏处理
+        userDB.setPassword("123456");
+        String userJSON = JsonUtil.getBeanToJson(userDB);
+        jedisCluster.hset(ticket, "JT_USER", userJSON);
+        jedisCluster.hset(ticket, "JT_USER_IP", ip);
+        jedisCluster.expire(ticket, 7 * 24 * 3600);
+
+        //将用户名和ticket信息绑定
+        jedisCluster
+                .setex("JT_USER_" + username, 7 * 24 * 3600, ticket);
+
+        //用户名和ticket绑定即可!!!!!!
+        return ticket;
+
     }
 }
