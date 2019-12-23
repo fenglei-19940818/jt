@@ -9,8 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 @Service
-public class
-DubboCartServiceImpl implements DubboCartService {
+public class DubboCartServiceImpl implements DubboCartService {
 
     @Autowired
     private CartMapper cartMapper;

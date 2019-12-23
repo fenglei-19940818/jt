@@ -72,8 +72,7 @@ public class DubboUserServiceImpl implements DubboUserService {
         jedisCluster.expire(ticket, 7 * 24 * 3600);
 
         //将用户名和ticket信息绑定
-        jedisCluster
-                .setex("JT_USER_" + username, 7 * 24 * 3600, ticket);
+        jedisCluster.setex("JT_USER_" + username, 7 * 24 * 3600, ticket);
 
         //用户名和ticket绑定即可!!!!!!
         return ticket;

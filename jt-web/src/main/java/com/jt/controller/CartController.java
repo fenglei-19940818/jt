@@ -3,8 +3,10 @@ package com.jt.controller;
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.jt.pojo.Cart;
 import com.jt.pojo.Item;
+import com.jt.pojo.User;
 import com.jt.service.DubboCartService;
 import com.jt.util.HttpClientService;
+import com.jt.util.UserThreadLocal;
 import com.jt.vo.SysResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,8 +35,6 @@ public class CartController {
     @Value("${manage.url}")
     private String manageUrl;
 
-    private Long userId = 7L;
-
     /**
      * 跳转到购物车展现页面
      *
@@ -42,6 +42,7 @@ public class CartController {
      */
     @RequestMapping(value = "/show")
     public String show(Model model) {
+        Long userId = UserThreadLocal.get().getId();
         List<Cart> cartList = cartService.findCartListByUserId(userId);
         model.addAttribute("cartList", cartList);
         return "cart";
@@ -57,6 +58,7 @@ public class CartController {
      */
     @RequestMapping(value = "/add/{itemId}")
     public String add(Cart cart, Model model) {
+        Long userId = UserThreadLocal.get().getId();
         //查询商品价格
         Map<String, String> map = new HashMap<>();
         map.put("itemId", cart.getItemId().toString());
@@ -75,6 +77,7 @@ public class CartController {
     @RequestMapping(value = "/update/num/{itemId}/{num}")
     @ResponseBody
     public SysResult updateCartNum(Cart cart) {
+        Long userId = UserThreadLocal.get().getId();
         //修改数量
         cartService.updateCartNum(cart.setUserId(userId));
         return SysResult.success();
@@ -82,6 +85,7 @@ public class CartController {
 
     @RequestMapping(value = "/delete/{itemId}")
     public String deleteCart(Cart cart) {
+        Long userId = UserThreadLocal.get().getId();
         //删除商品
         cartService.deleteCart(cart.setUserId(userId));
         return "redirect:/cart/show.html";

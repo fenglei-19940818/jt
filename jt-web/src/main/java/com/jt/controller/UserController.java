@@ -4,6 +4,7 @@ import com.alibaba.dubbo.config.annotation.Reference;
 import com.jt.pojo.User;
 import com.jt.service.DubboUserService;
 import com.jt.service.UserService;
+import com.jt.util.CookieUtil;
 import com.jt.util.IPUtil;
 import com.jt.vo.SysResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import redis.clients.jedis.JedisCluster;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -27,6 +29,9 @@ public class UserController {
 
     @Reference(check = false)
     private DubboUserService dubboUserService;
+
+    @Autowired
+    private JedisCluster jedisCluster;
 
     /**
      * 实现通用的跳转
@@ -95,6 +100,40 @@ public class UserController {
         //将Cookie加到response中
         response.addCookie(cookieUser);
         return sysResult.setData(ticket);
+    }
+
+    @RequestMapping(value = "/logout", method = RequestMethod.GET)
+    public String logout(HttpServletRequest request, HttpServletResponse response) {
+
+        String ticket = null;
+        String username = null;
+        Boolean flagTicket = false;
+        //获取cookie
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null && cookies.length > 0) {
+            for (Cookie cookie : cookies) {
+                if (("JT_USER").equals(cookie.getName())) {
+                    username = cookie.getValue();
+                }
+                if ("JT_TICKET".equals(cookie.getName())) {
+                    ticket = cookie.getValue();
+                }
+            }
+        }
+        //删除redis中ticket的数据
+        if (!StringUtils.isEmpty(ticket)) {
+            jedisCluster.del(ticket);
+            //删除cookie中的数据
+            CookieUtil.deleteCookie("JT_TICKET", "/", "jt.com", response);
+        }
+        //删除redis中user的数据
+        if (!StringUtils.isEmpty(username)) {
+            jedisCluster.del("JT_USER_" + username);
+            //删除cookie中的数据
+            CookieUtil.deleteCookie("JT_USER", "/", "jt.com", response);
+
+        }
+        return "redirect:/";
     }
 
 }

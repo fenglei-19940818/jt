@@ -7,13 +7,13 @@
   </parent>
   <artifactId>jt-web</artifactId>
   <packaging>war</packaging>
-  <dependencies>
-  	<dependency>
-  		<groupId>com.jt</groupId>
-  		<artifactId>jt-common</artifactId>
-  		<version>0.0.1-SNAPSHOT</version>
-  	</dependency>
-  </dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>com.jt</groupId>
+			<artifactId>jt-common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
   
   <build>
 		<plugins>
